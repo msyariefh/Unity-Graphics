@@ -1,5 +1,11 @@
 #define GPU_RESIDENT_DRAWER_ALLOW_FORCE_ON
 
+// Because the GPUDrivenRenderer API changed in 6000.0.38, we need a way to select the version.
+// Unfortunately, the only way to select a patch version is by checking each patch version individually is defined.
+#if UNITY_6000_1_OR_NEWER || (UNITY_6000_0_OR_NEWER && !(UNITY_6000_0_0 || UNITY_6000_0_1 || UNITY_6000_0_2 || UNITY_6000_0_3 || UNITY_6000_0_4 || UNITY_6000_0_5 || UNITY_6000_0_6 || UNITY_6000_0_7 || UNITY_6000_0_8 || UNITY_6000_0_9 || UNITY_6000_0_10 || UNITY_6000_0_11 || UNITY_6000_0_12 || UNITY_6000_0_13 || UNITY_6000_0_14 || UNITY_6000_0_15 || UNITY_6000_0_16 || UNITY_6000_0_17 || UNITY_6000_0_18 || UNITY_6000_0_19 || UNITY_6000_0_20 || UNITY_6000_0_21 || UNITY_6000_0_22 || UNITY_6000_0_23 || UNITY_6000_0_24 || UNITY_6000_0_25 || UNITY_6000_0_26 || UNITY_6000_0_27 || UNITY_6000_0_28 || UNITY_6000_0_29 || UNITY_6000_0_30 || UNITY_6000_0_31 || UNITY_6000_0_32 || UNITY_6000_0_33 || UNITY_6000_0_34 || UNITY_6000_0_35 || UNITY_6000_0_36 || UNITY_6000_0_37))
+#define UNITY_6000_0_38_OR_NEWER
+#endif
+
 using System;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -540,7 +546,7 @@ namespace UnityEngine.Rendering
         {
             if (s_Instance is null)
                 return;
-            
+
             if (m_ContextIntPtr == context.Internal_GetPtr())
             {
                 m_ContextIntPtr = IntPtr.Zero;
@@ -787,7 +793,16 @@ namespace UnityEngine.Rendering
                     return;
 
                 unsupportedMaterialIDs.Resize(changedUsedMaterialIDs.Length, NativeArrayOptions.UninitializedMemory);
+#if UNITY_6000_0_38_OR_NEWER
+                // Unity Removed the FindUnsupportedMaterialIDs in 6000.0.38
+                NativeList<int> supportedMaterialIDs = new NativeList<int>(Allocator.TempJob);
+                NativeList<GPUDrivenPackedMaterialData> supportedPackedMaterialDatas = new NativeList<GPUDrivenPackedMaterialData>(Allocator.TempJob);
+                supportedMaterialIDs.Resize(changedUsedMaterialIDs.Length, NativeArrayOptions.UninitializedMemory);
+                supportedPackedMaterialDatas.Resize(changedUsedMaterialIDs.Length, NativeArrayOptions.UninitializedMemory);
+                int unsupportedMaterialCount = GPUDrivenProcessor.ClassifyMaterials(changedUsedMaterialIDs.AsArray(), unsupportedMaterialIDs.AsArray(), supportedMaterialIDs.AsArray(), supportedPackedMaterialDatas.AsArray());
+#else
                 int unsupportedMaterialCount = GPUDrivenProcessor.FindUnsupportedMaterialIDs(changedUsedMaterialIDs.AsArray(), unsupportedMaterialIDs.AsArray());
+#endif
                 unsupportedMaterialIDs.Resize(unsupportedMaterialCount, NativeArrayOptions.ClearMemory);
             }
         }

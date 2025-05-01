@@ -53,6 +53,15 @@ struct Varyings
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
+bool IsIdentity(in float4x4 modelMatrix)
+{
+    return
+        modelMatrix[0][0] == 1.0 && modelMatrix[0][1] == 0.0 && modelMatrix[0][2] == 0.0 && modelMatrix[0][3] == 0.0 &&
+        modelMatrix[1][0] == 0.0 && modelMatrix[1][1] == 1.0 && modelMatrix[1][2] == 0.0 && modelMatrix[1][3] == 0.0 &&
+        modelMatrix[2][0] == 0.0 && modelMatrix[2][1] == 0.0 && modelMatrix[2][2] == 1.0 && modelMatrix[2][3] == 0.0 &&
+        modelMatrix[3][0] == 0.0 && modelMatrix[3][1] == 0.0 && modelMatrix[3][2] == 0.0 && modelMatrix[3][3] == 1.0;
+}
+
 // -------------------------------------
 // Vertex
 Varyings vert(Attributes input)
@@ -85,9 +94,21 @@ Varyings vert(Attributes input)
     prevPos = prevPos - float4(input.alembicMotionVector, 0);
 #endif
 
-    output.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, mul(UNITY_PREV_MATRIX_M, prevPos));
+    // Particle System Workaround.
+    // There is currently a bug in Unity that UNITY_PREV_MATRIX_M is relative to the particle system
+    // transform, but UNITY_MATRIX_M is always identity, causing artifacts for particles with motion vectors.
+    // We can avoid this bug by checking whether the current model matrix is the identity matrix, and if
+    // so, simply use the unaltered previous position without multiplying by UNITY_PREV_MATRIX_M.
+    if (!IsIdentity(UNITY_MATRIX_M))
+    {
+        prevPos = mul(UNITY_PREV_MATRIX_M, prevPos);
+    }
 
+    output.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, prevPos);
+
+#if !defined(APPLICATION_SPACE_WARP_MOTION)
     ApplyMotionVectorZBias(output.positionCS);
+#endif
 
     return output;
 }
@@ -107,7 +128,7 @@ float4 frag(Varyings input) : SV_Target
         LODFadeCrossFade(input.positionCS);
     #endif
 
-    #if defined(APLICATION_SPACE_WARP_MOTION)
+    #if defined(APPLICATION_SPACE_WARP_MOTION)
         return float4(CalcAswNdcMotionVectorFromCsPositions(input.positionCSNoJitter, input.previousPositionCSNoJitter), 1);
     #else
         return float4(CalcNdcMotionVectorFromCsPositions(input.positionCSNoJitter, input.previousPositionCSNoJitter), 0, 0);
