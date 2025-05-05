@@ -209,7 +209,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                         loadAction = RenderBufferLoadAction.Load;
 #if ENABLE_VR && ENABLE_XR_MODULE
                     if (cameraData.xr.enabled)
-                        loadAction = RenderBufferLoadAction.DontCare;
+                        loadAction = RenderBufferLoadAction.Load;
 #endif
 
                     CoreUtils.SetRenderTarget(renderingData.commandBuffer, cameraTargetHandle, loadAction, RenderBufferStoreAction.Store, ClearFlag.None, Color.clear);
@@ -291,7 +291,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 // This is a screen-space pass, make sure foveated rendering is disabled for non-uniform renders
                 // Also disable foveation on final blit pass for mobile XR devices to use direct mode on
                 // tiled GPUs when possible.
-                bool passSupportsFoveation = !XRSystem.foveatedRenderingCaps.HasFlag(FoveatedRenderingCaps.NonUniformRaster) && !PlatformAutoDetect.isXRMobile;
+                bool passSupportsFoveation = !XRSystem.foveatedRenderingCaps.HasFlag(FoveatedRenderingCaps.NonUniformRaster);
                 builder.EnableFoveatedRasterization(cameraData.xr.supportsFoveatedRendering && passSupportsFoveation);
 #endif
 
