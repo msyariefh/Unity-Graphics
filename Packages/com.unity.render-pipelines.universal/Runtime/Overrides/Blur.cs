@@ -11,7 +11,7 @@ namespace UnityEngine.Rendering.Universal
     public sealed class Blur : VolumeComponent, IPostProcessComponent
     {
         /// <summary>
-        /// Controls the strength of the vignette effect.
+        /// Controls the strength of the blur effect.
         /// </summary>
         [Tooltip("Use the slider to set the strength of the Vignette effect.")]
         public ClampedFloatParameter blurAmount = new ClampedFloatParameter(0f, 0f, 1f);

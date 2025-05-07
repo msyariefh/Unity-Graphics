@@ -91,7 +91,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         #define LensDirtOffset          _LensDirt_Params.zw
         #define LensDirtIntensity       _LensDirt_Intensity.x
 
-        #define BlurAmount              _BlurAmount
+        #define BlurAmount              _BlurAmount.x
 
         #define VignetteColor           _Vignette_Params1.xyz
         #define VignetteTexture         _VignetteTexture
@@ -240,7 +240,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             UNITY_BRANCH
             if (BlurAmount > 0)
             {
-                float actual = 0.005;
+                float actual = BlurAmount / 100.0;
                 float negactual = actual * -1;
 
                 float2 uv1 = DistortUV(uv + float2(actual, actual));

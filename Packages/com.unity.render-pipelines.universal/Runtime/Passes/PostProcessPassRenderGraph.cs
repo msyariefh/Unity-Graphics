@@ -1917,6 +1917,7 @@ namespace UnityEngine.Rendering.Universal
             m_ColorAdjustments = stack.GetComponent<ColorAdjustments>();
             m_Tonemapping = stack.GetComponent<Tonemapping>();
             m_FilmGrain = stack.GetComponent<FilmGrain>();
+            m_Blur = stack.GetComponent<Blur>();
             m_UseFastSRGBLinearConversion = postProcessingData.useFastSRGBLinearConversion;
             m_SupportDataDrivenLensFlare = postProcessingData.supportDataDrivenLensFlare;
             m_SupportScreenSpaceLensFlare = postProcessingData.supportScreenSpaceLensFlare;

@@ -100,7 +100,6 @@ half3 ApplyVignette(half3 input, float2 uv, float2 center, float intensity, floa
     float vignette = dot(vigDist, vigDist);
     tex.r = pow(tex.r, smoothness);
     vignette /= tex.r;
-    vignette = vignette;
     
     float alpha = saturate(vignette * intensity);
     
