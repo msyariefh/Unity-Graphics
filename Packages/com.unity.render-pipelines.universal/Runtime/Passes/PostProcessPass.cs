@@ -55,6 +55,7 @@ namespace UnityEngine.Rendering.Universal
         ColorAdjustments m_ColorAdjustments;
         Tonemapping m_Tonemapping;
         FilmGrain m_FilmGrain;
+        Blur m_Blur;
 
         // Depth Of Field shader passes
         const int k_GaussianDoFPassComputeCoc = 0;
@@ -673,6 +674,7 @@ namespace UnityEngine.Rendering.Universal
                 // Only apply dithering & grain if there isn't a final pass.
                 SetupGrain(cameraData, m_Materials.uber);
                 SetupDithering(cameraData, m_Materials.uber);
+                SetupBlur(m_Materials.uber);
 
                 if (RequireSRGBConversionBlitToBackBuffer(cameraData.requireSrgbConversion))
                     m_Materials.uber.EnableKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
@@ -1550,6 +1552,10 @@ namespace UnityEngine.Rendering.Universal
 
             material.SetVector(ShaderConstants._Vignette_Params1, v1);
             material.SetVector(ShaderConstants._Vignette_Params2, v2);
+            if (m_Vignette.tex != null)
+            {
+                material.SetTexture("_VignetteTexture",  m_Vignette.tex.value);
+            }
         }
 
 #endregion
@@ -1858,9 +1864,16 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
+        #endregion
+#region Blur
+        void SetupBlur(Material mat)
+        {
+            var amount = m_Blur.blurAmount.value;
+            mat.SetFloat("_BlurAmount", amount);
+        }
 #endregion
 
-#region Internal utilities
+        #region Internal utilities
 
         class MaterialLibrary
         {

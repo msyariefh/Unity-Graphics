@@ -2066,6 +2066,7 @@ namespace UnityEngine.Rendering.Universal
                 SetupVignette(m_Materials.uber, cameraData.xr);
                 SetupGrain(cameraData, m_Materials.uber);
                 SetupDithering(cameraData, m_Materials.uber);
+                SetupBlur(m_Materials.uber);
 
                 if (RequireSRGBConversionBlitToBackBuffer(cameraData.requireSrgbConversion))
                     m_Materials.uber.EnableKeyword(ShaderKeywordStrings.LinearToSRGBConversion);

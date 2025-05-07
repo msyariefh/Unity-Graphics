@@ -17,6 +17,12 @@ namespace UnityEngine.Rendering.Universal
         public ColorParameter color = new ColorParameter(Color.black, false, false, true);
 
         /// <summary>
+        /// Specifies the texture of the vignette
+        /// </summary>
+        [Tooltip("Vignette Texture")]
+        public TextureParameter tex = new TextureParameter(null);
+
+        /// <summary>
         /// Sets the center point for the vignette.
         /// </summary>
         [Tooltip("Sets the vignette center point (screen center is [0.5,0.5]).")]

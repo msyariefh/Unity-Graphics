@@ -50,7 +50,10 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         TEXTURE2D(_UserLut);
         TEXTURE2D(_BlueNoise_Texture);
         TEXTURE2D_X(_OverlayUITexture);
+        TEXTURE2D_X(_VignetteTexture);
 
+        float _BlurAmount;
+        float4 _VignetteTexture_TexelSize;
         float4 _BloomTexture_TexelSize;
         float4 _Lut_Params;
         float4 _UserLut_Params;
@@ -88,7 +91,10 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         #define LensDirtOffset          _LensDirt_Params.zw
         #define LensDirtIntensity       _LensDirt_Intensity.x
 
+        #define BlurAmount              _BlurAmount
+
         #define VignetteColor           _Vignette_Params1.xyz
+        #define VignetteTexture         _VignetteTexture
     #ifdef USING_STEREO_MATRICES
         #define VignetteCenterEye0      _Vignette_ParamsXR.xy
         #define VignetteCenterEye1      _Vignette_ParamsXR.zw
@@ -231,6 +237,32 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             }
             #endif
 
+            UNITY_BRANCH
+            if (BlurAmount > 0)
+            {
+                float actual = 0.005;
+                float negactual = actual * -1;
+
+                float2 uv1 = DistortUV(uv + float2(actual, actual));
+                float2 uv2 = DistortUV(uv + float2(actual, 0));
+                float2 uv3 = DistortUV(uv + float2(0, actual));
+                float2 uv4 = DistortUV(uv + float2(negactual, negactual));
+                float2 uv5 = DistortUV(uv + float2(negactual, 0));
+                float2 uv6 = DistortUV(uv + float2(0, negactual));
+
+                half4 input1 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv1);
+                half4 input2 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv2);
+                half4 input3 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv3);
+                half4 input4 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv4);
+                half4 input5 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv5);
+                half4 input6 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv6);
+
+                half4 total = input1 + input2 + input3 + input4 + input5 + input6;
+                total /= 6;
+
+                color = total.rgb;
+            }
+
             // To save on variants we'll use an uniform branch for vignette. Lower end platforms
             // don't like these but if we're running Uber it means we're running more expensive
             // effects anyway. Lower-end devices would limit themselves to on-tile compatible effect
@@ -243,8 +275,8 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 // view be at a different location.
                 const float2 VignetteCenter = unity_StereoEyeIndex == 0 ? VignetteCenterEye0 : VignetteCenterEye1;
             #endif
-
-                color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor);
+                half4 vigTex = SAMPLE_TEXTURE2D_X(VignetteTexture, sampler_LinearClamp, SCREEN_COORD_REMOVE_SCALEBIAS(uv));
+                color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor, vigTex);
             }
 
             // Color grading is always enabled when post-processing/uber is active

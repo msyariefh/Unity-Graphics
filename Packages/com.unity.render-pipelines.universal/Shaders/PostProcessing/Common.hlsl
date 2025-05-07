@@ -88,14 +88,24 @@ real4 GetLinearToSRGB(real4 c)
 // Shared functions for uber & fast path (on-tile)
 // These should only process an input color, don't sample in neighbor pixels!
 
-half3 ApplyVignette(half3 input, float2 uv, float2 center, float intensity, float roundness, float smoothness, half3 color)
+half3 ApplyVignette(half3 input, float2 uv, float2 center, float intensity, float roundness, float smoothness, half3 color, half3 tex)
 {
+    if (intensity <= 0 || smoothness <= 0)
+        return input;
+    
     center = UnityStereoTransformScreenSpaceTex(center);
-    float2 dist = abs(uv - center) * intensity;
-
-    dist.x *= roundness;
-    float vfactor = pow(saturate(1.0 - dot(dist, dist)), smoothness);
-    return input * lerp(color, (1.0).xxx, vfactor);
+    float2 vigDist = abs(uv - center);
+    vigDist *= roundness;
+    
+    float vignette = dot(vigDist, vigDist);
+    tex.r = pow(tex.r, smoothness);
+    vignette /= tex.r;
+    vignette = vignette;
+    
+    float alpha = saturate(vignette * intensity);
+    
+    return lerp(input, input * color, alpha);
+ 
 }
 
 half3 ApplyTonemap(half3 input)
