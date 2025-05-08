@@ -250,17 +250,15 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 float2 uv5 = DistortUV(uv + float2(negactual, 0));
                 float2 uv6 = DistortUV(uv + float2(0, negactual));
 
-                half4 input1 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv1);
-                half4 input2 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv2);
-                half4 input3 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv3);
-                half4 input4 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv4);
-                half4 input5 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv5);
-                half4 input6 = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv6);
 
-                half4 total = input1 + input2 + input3 + input4 + input5 + input6;
-                total /= 6;
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv1);
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv2);
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv3);
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv4);
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv5);
+                color += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv6);
 
-                color = total.rgb;
+                color /= 7;
             }
 
             // To save on variants we'll use an uniform branch for vignette. Lower end platforms
