@@ -56,6 +56,7 @@ namespace UnityEngine.Rendering.Universal
         Tonemapping m_Tonemapping;
         FilmGrain m_FilmGrain;
         Blur m_Blur;
+        BrightnessCorrection m_BrightnessCorrection;
 
         // Depth Of Field shader passes
         const int k_GaussianDoFPassComputeCoc = 0;
@@ -378,6 +379,8 @@ namespace UnityEngine.Rendering.Universal
             m_ColorAdjustments = stack.GetComponent<ColorAdjustments>();
             m_Tonemapping = stack.GetComponent<Tonemapping>();
             m_FilmGrain = stack.GetComponent<FilmGrain>();
+            m_Blur = stack.GetComponent<Blur>();    
+            m_BrightnessCorrection = stack.GetComponent<BrightnessCorrection>();
             m_UseFastSRGBLinearConversion = renderingData.postProcessingData.useFastSRGBLinearConversion;
             m_SupportScreenSpaceLensFlare = renderingData.postProcessingData.supportScreenSpaceLensFlare;
             m_SupportDataDrivenLensFlare = renderingData.postProcessingData.supportDataDrivenLensFlare;
@@ -675,6 +678,7 @@ namespace UnityEngine.Rendering.Universal
                 SetupGrain(cameraData, m_Materials.uber);
                 SetupDithering(cameraData, m_Materials.uber);
                 SetupBlur(m_Materials.uber);
+                SetupBrightness(m_Materials.uber);
 
                 if (RequireSRGBConversionBlitToBackBuffer(cameraData.requireSrgbConversion))
                     m_Materials.uber.EnableKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
@@ -1871,7 +1875,17 @@ namespace UnityEngine.Rendering.Universal
             var amount = m_Blur.blurAmount.value;
             mat.SetFloat("_BlurAmount", amount);
         }
-#endregion
+        #endregion
+        #region Brightness Correction
+
+        void SetupBrightness(Material mat)
+        {
+            var brightness = m_BrightnessCorrection.m_Brightness.value;
+            var gamma = m_BrightnessCorrection.m_Gamma.value;
+
+            mat.SetVector("_BrightnessGamma", new Vector4((brightness + 100f) * 0.01f, 1f, 1f, 1f/gamma));
+        }
+        #endregion
 
         #region Internal utilities
 

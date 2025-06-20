@@ -52,6 +52,7 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         TEXTURE2D_X(_OverlayUITexture);
         TEXTURE2D_X(_VignetteTexture);
 
+        half4 _BrightnessGamma;
         float _BlurAmount;
         float4 _VignetteTexture_TexelSize;
         float4 _BloomTexture_TexelSize;
@@ -334,11 +335,14 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
             }
             #endif
 
+            color = pow(color.rgb * _BrightnessGamma.x, _BrightnessGamma.w);
+
             #ifdef HDR_ENCODING
             {
                 color.rgb = OETF(color.rgb, MaxNits);
             }
             #endif
+
 
             #if defined(DEBUG_DISPLAY)
             half4 debugColor = 0;

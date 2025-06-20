@@ -1918,6 +1918,7 @@ namespace UnityEngine.Rendering.Universal
             m_Tonemapping = stack.GetComponent<Tonemapping>();
             m_FilmGrain = stack.GetComponent<FilmGrain>();
             m_Blur = stack.GetComponent<Blur>();
+            m_BrightnessCorrection = stack.GetComponent<BrightnessCorrection>();
             m_UseFastSRGBLinearConversion = postProcessingData.useFastSRGBLinearConversion;
             m_SupportDataDrivenLensFlare = postProcessingData.supportDataDrivenLensFlare;
             m_SupportScreenSpaceLensFlare = postProcessingData.supportScreenSpaceLensFlare;
@@ -2068,6 +2069,7 @@ namespace UnityEngine.Rendering.Universal
                 SetupGrain(cameraData, m_Materials.uber);
                 SetupDithering(cameraData, m_Materials.uber);
                 SetupBlur(m_Materials.uber);
+                SetupBrightness(m_Materials.uber);
 
                 if (RequireSRGBConversionBlitToBackBuffer(cameraData.requireSrgbConversion))
                     m_Materials.uber.EnableKeyword(ShaderKeywordStrings.LinearToSRGBConversion);
