@@ -51,6 +51,14 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         TEXTURE2D(_BlueNoise_Texture);
         TEXTURE2D_X(_OverlayUITexture);
         TEXTURE2D_X(_VignetteTexture);
+        TEXTURE2D_X(_DangerTexture);
+
+        float4 _DangerTexture_TexelSize;
+        half4 _Danger_Params1;
+        float4 _Danger_Params2;
+    #ifdef USING_STEREO_MATRICES
+        float4 _Danger_ParamsXR;
+    #endif
 
         half4 _BrightnessGamma;
         float _BlurAmount;
@@ -93,6 +101,18 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
         #define LensDirtIntensity       _LensDirt_Intensity.x
 
         #define BlurAmount              _BlurAmount.x
+
+        #define DangerTexture           _DangerTexture
+        #define DangerColor             _Danger_Params1.xyz
+    #ifdef USING_STEREO_MATRICES
+        #define DangerCenterEye0        _Danger_ParamsXR.xy
+        #define DangerCenterEye1        _Danger_ParamsXR.zw
+    #else
+        #define DangerCenter            _Danger_Params2.xy
+    #endif
+        #define DangerIntensity         _Danger_Params2.z
+        #define DangerSmoothness        _Danger_Params2.w
+        #define DangerRoundness         _Danger_Params1.w
 
         #define VignetteColor           _Vignette_Params1.xyz
         #define VignetteTexture         _VignetteTexture
@@ -274,8 +294,20 @@ Shader "Hidden/Universal Render Pipeline/UberPost"
                 // view be at a different location.
                 const float2 VignetteCenter = unity_StereoEyeIndex == 0 ? VignetteCenterEye0 : VignetteCenterEye1;
             #endif
-                half4 vigTex = SAMPLE_TEXTURE2D_X(VignetteTexture, sampler_LinearClamp, SCREEN_COORD_REMOVE_SCALEBIAS(uv));
-                color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor, vigTex);
+                color = ApplyVignette(color, uvDistorted, VignetteCenter, VignetteIntensity, VignetteRoundness, VignetteSmoothness, VignetteColor);
+                
+            }
+
+            UNITY_BRANCH
+            if (DangerIntensity > 0)
+            {
+            #ifdef USING_STEREO_MATRICES
+                // With XR, the views can use asymmetric FOV which will have the center of each
+                // view be at a different location.
+                const float2 DangerCenter = unity_StereoEyeIndex == 0 ? DangerCenterEye0 : DangerCenterEye1;
+            #endif
+            half4 dangerTex = SAMPLE_TEXTURE2D_X(DangerTexture, sampler_LinearClamp, SCREEN_COORD_REMOVE_SCALEBIAS(uv));
+            color = ApplyDanger(color, uvDistorted, DangerCenter, DangerIntensity, DangerRoundness, DangerSmoothness, DangerColor.xyz, dangerTex.xyz);
             }
 
             // Color grading is always enabled when post-processing/uber is active

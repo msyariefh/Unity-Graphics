@@ -57,6 +57,7 @@ namespace UnityEngine.Rendering.Universal
         FilmGrain m_FilmGrain;
         Blur m_Blur;
         BrightnessCorrection m_BrightnessCorrection;
+        Danger m_Danger;
 
         // Depth Of Field shader passes
         const int k_GaussianDoFPassComputeCoc = 0;
@@ -1521,9 +1522,9 @@ namespace UnityEngine.Rendering.Universal
                 material.EnableKeyword(ShaderKeywordStrings.ChromaticAberration);
         }
 
-#endregion
+        #endregion
 
-#region Vignette
+        #region Vignette
 
         void SetupVignette(Material material, XRPass xrPass)
         {
@@ -1556,15 +1557,48 @@ namespace UnityEngine.Rendering.Universal
 
             material.SetVector(ShaderConstants._Vignette_Params1, v1);
             material.SetVector(ShaderConstants._Vignette_Params2, v2);
-            if (m_Vignette.tex != null)
+        }
+        void SetupDanger(Material material, XRPass xrPass)
+        {
+            var color = m_Danger.color.value;
+            var center = m_Danger.center.value;
+            var aspectRatio = m_Descriptor.width / (float)m_Descriptor.height;
+
+
+#if ENABLE_VR && ENABLE_XR_MODULE
+            if (xrPass != null && xrPass.enabled)
             {
-                material.SetTexture("_VignetteTexture",  m_Vignette.tex.value);
+                if (xrPass.singlePassEnabled)
+                    material.SetVector("_Danger_ParamsXR", xrPass.ApplyXRViewCenterOffset(center));
+                else
+                    // In multi-pass mode we need to modify the eye center with the values from .xy of the corrected
+                    // center since the version of the shader that is not single-pass will use the value in _Vignette_Params2
+                    center = xrPass.ApplyXRViewCenterOffset(center);
+            }
+#endif
+
+            var v1 = new Vector4(
+                color.r, color.g, color.b,
+                m_Danger.rounded.value ? aspectRatio : 1f
+            );
+            var v2 = new Vector4(
+                center.x, center.y,
+                m_Danger.intensity.value * 3f,
+                m_Danger.smoothness.value * 5f
+            );
+
+            material.SetVector("_Danger_Params1", v1);
+            material.SetVector("_Danger_Params2", v2);
+            if (m_Danger.tex != null)
+            {
+                material.SetTexture("_DangerTexture", m_Danger.tex.value);
             }
         }
 
-#endregion
 
-#region Color Grading
+        #endregion
+
+        #region Color Grading
 
         void SetupColorGrading(CommandBuffer cmd, ref RenderingData renderingData, Material material)
         {
